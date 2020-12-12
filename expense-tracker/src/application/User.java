@@ -3,6 +3,7 @@ package application;
 public class User {
 	private String name;
 	private int ID;
+	private Double budget;
 	
 	/**
 	 * Constructs a user object with a given name.
@@ -31,7 +32,16 @@ public class User {
 	public int getID() {
 		return ID;
 	}
-
+	
+	public void setBudget(Double val)
+	{
+		this.budget = val;
+	}
+	
+	public Double getBudget()
+	{
+		return budget;
+	}
 	/**
 	 * Checks that the name entered is in the correct format.
 	 * 
@@ -89,15 +99,5 @@ public class User {
 		return true;
 	}
 
-//	public boolean equals(User u)
-//	{
-//		if(this.name != u.name)
-//			return false;
-//		else if(this.ID != u.ID)
-//			return false;
-//		else 
-//			return true;
-//				
-//	}
 
 }
