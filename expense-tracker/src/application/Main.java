@@ -31,7 +31,7 @@ import javafx.stage.Stage;
 
 public class Main extends Application {
 
-	private ExpenseTracker expTrcker = new ExpenseTracker("FileDatabase.txt");
+	private ExpenseTracker expTrcker = new ExpenseTracker();
 	private User currentSystemUser = null; // stores user currently logged in
 
 	// stage
@@ -64,7 +64,6 @@ public class Main extends Application {
 		// set panes
 		homePane = createHomePane();
 		registerPane1 = createRegisterPane1();
-		registerPane2 = createRegisterPane2();
 		loginPane = createLoginPane();
 		loggedInPane = createLoggedInPane();
 		updatePane = createUpdatePane();
@@ -73,7 +72,7 @@ public class Main extends Application {
 		// set scenes
 		sceneHome = new Scene(homePane, 750, 500);
 		sceneRegister1 = new Scene(registerPane1, 750, 500);
-		sceneRegister2 = new Scene(registerPane2, 750, 500);
+		//sceneRegister2 = new Scene(registerPane2, 750, 500);
 		sceneLogin = new Scene(loginPane, 750, 500);
 		sceneLoggedIn = new Scene(loggedInPane, 750, 500);
 		sceneUpdate = new Scene(updatePane, 750, 500);
@@ -180,129 +179,38 @@ public class Main extends Application {
 		Label lblError = new Label("");
 		lblError.setFont(Font.font(16));
 		GridPane.setHalignment(lblError, HPos.LEFT);
-		grid.add(lblError, 1, 5);
+		grid.add(lblError, 1, 2);
 
 		Button btnNext = new Button("Next");
 		btnNext.setFont(Font.font(16));
 		btnNext.setOnMouseClicked(e -> {
 			String valName = tfName.getText();
-
-
+			if(tfId.getText().isEmpty() || valName.isEmpty())
+			{
+				lblError.setText("FIELD(S) ARE EMPTY");
+			}
+			else if(!User.validName(valName))
+			{
+				tfName.clear();
+				tfName.setPromptText("FULL NAME W/ SPACES");
+			}
+			else if(!validNum(tfId.getText(), 4))
+			{
+				tfId.clear();
+				tfId.setPromptText("ENTER ONLY 4 DIGITS");
+			}
+			else
+			{
+				int id = Integer.parseInt(tfId.getText());
+				currentSystemUser = new User(valName, id);
+				expTrcker.createNewUser(currentSystemUser);
+				goLoggedIn();
+			}
 			// if everything works
-			//int value5 = Integer.parseInt(tfZip.getText());
-
-					goNext();
-				
 			// System.out.println(loggedInUser.toString());
 		});
 
 		buttonContainer.getChildren().addAll(btnReturnToMain, btnNext);
-
-		// a vbox to contain grid and buttonContainer
-		VBox vBox = new VBox();
-		vBox.setAlignment(Pos.CENTER);
-		vBox.setSpacing(10);
-		vBox.getChildren().addAll(grid, buttonContainer);
-
-		pane.getChildren().addAll(register, vBox);
-
-		return pane;
-
-	}
-
-	// creates the next register page that the first goes to next
-	public HBox createRegisterPane2() {
-
-		// the overarching hbox container for this page
-		HBox pane = new HBox();
-		pane.setAlignment(Pos.CENTER);
-		pane.setSpacing(50);
-
-		// the "title" of this page
-		Text register = new Text("REGISTER");
-		register.setFont(Font.font(48));
-		register.setTextAlignment(TextAlignment.RIGHT);
-
-		// a grid pane to contain labels and text fields
-		GridPane grid = new GridPane();
-		grid.setAlignment(Pos.CENTER);
-		grid.setHgap(10);
-		grid.setVgap(10);
-
-		// labels
-		Label lblStatus = new Label("COVID-19 Status");
-		lblStatus.setFont(Font.font(16));
-		GridPane.setHalignment(lblStatus, HPos.RIGHT);
-		grid.add(lblStatus, 0, 0);
-
-		Label lblInteractions = new Label("Interactions");
-		lblInteractions.setFont(Font.font(16));
-		GridPane.setHalignment(lblInteractions, HPos.RIGHT);
-		GridPane.setValignment(lblInteractions, VPos.TOP);
-		grid.add(lblInteractions, 0, 1);
-
-		// choose status menu and interaction text field
-		MenuButton chooseStatus = new MenuButton();
-		chooseStatus.setFont(Font.font(16));
-		chooseStatus.setText("Choose status...");
-		chooseStatus.setPrefWidth(200);
-
-		MenuItem notTested = new MenuItem("Not tested");
-		MenuItem testPos = new MenuItem("Tested positive");
-		MenuItem testNeg = new MenuItem("Tested negative");
-
-		// need to force user to choose a status
-		notTested.setOnAction(e -> {
-			chooseStatus.setText("Not tested");
-		});
-		testPos.setOnAction(e -> {
-			chooseStatus.setText("Tested positive");
-		});
-		testNeg.setOnAction(e -> {
-			chooseStatus.setText("Tested negative");
-		});
-
-		chooseStatus.getItems().addAll(notTested, testNeg, testPos);
-		grid.add(chooseStatus, 1, 0);
-
-		// text area to enter interactions
-		TextArea tfInteractions = new TextArea();
-		tfInteractions.setFont(Font.font(16));
-		tfInteractions.setPrefSize(200, 200);
-		tfInteractions.setWrapText(true);
-		tfInteractions.setPromptText("FirstName LastName, FirstName2 LastName2, ...");
-		grid.add(tfInteractions, 1, 1);
-
-		// an hbox to contain the buttons
-		HBox buttonContainer = new HBox();
-		buttonContainer.setAlignment(Pos.TOP_RIGHT);
-		buttonContainer.setSpacing(5);
-
-		Button btnBack = new Button("Back");
-		btnBack.setFont(Font.font(16));
-		btnBack.setOnMouseClicked(e -> {
-			goRegister();
-		});
-
-		Button btnSubmit = new Button("Submit");
-		btnSubmit.setFont(Font.font(16));
-		btnSubmit.setOnMouseClicked(e -> {
-			String value1 = chooseStatus.getText();
-			String value2 = tfInteractions.getText();
-
-			if (validInteractionList(value2) && validChooseStatus(value1)) {
-				registerUser(currentSystemUser, value1, value2);
-				chooseStatus.setText("Choose status...");
-				tfInteractions.clear();
-				goLoggedIn();
-			} else {
-
-				tfInteractions.clear();
-				tfInteractions.setPromptText("INVALID FORMAT");
-			}
-		});
-
-		buttonContainer.getChildren().addAll(btnBack, btnSubmit);
 
 		// a vbox to contain grid and buttonContainer
 		VBox vBox = new VBox();
@@ -345,21 +253,6 @@ public class Main extends Application {
 		GridPane.setHalignment(lblID, HPos.RIGHT);
 		grid.add(lblID, 0, 1);
 
-		Label lblCity = new Label("City");
-		lblCity.setFont(Font.font(16));
-		GridPane.setHalignment(lblCity, HPos.RIGHT);
-		grid.add(lblCity, 0, 2);
-
-		Label lblState = new Label("State");
-		lblState.setFont(Font.font(16));
-		GridPane.setHalignment(lblState, HPos.RIGHT);
-		grid.add(lblState, 0, 3);
-
-		Label lblZip = new Label("Zip Code");
-		lblZip.setFont(Font.font(16));
-		GridPane.setHalignment(lblZip, HPos.RIGHT);
-		grid.add(lblZip, 0, 4);
-
 		TextField tfName = new TextField();
 		tfName.setFont(Font.font(16));
 		tfName.setPromptText("Enter first and last name.");
@@ -367,23 +260,8 @@ public class Main extends Application {
 
 		TextField tfID = new TextField();
 		tfID.setFont(Font.font(16));
-		tfID.setPromptText("Enter street address.");
+		tfID.setPromptText("Enter ID");
 		grid.add(tfID, 1, 1);
-
-		TextField tfCity = new TextField();
-		tfCity.setFont(Font.font(16));
-		tfCity.setPromptText("Enter city.");
-		grid.add(tfCity, 1, 2);
-
-		TextField tfState = new TextField();
-		tfState.setFont(Font.font(16));
-		tfState.setPromptText("Enter state abbreviations.");
-		grid.add(tfState, 1, 3);
-
-		TextField tfZip = new TextField();
-		tfZip.setFont(Font.font(16));
-		tfZip.setPromptText("Enter zip code.");
-		grid.add(tfZip, 1, 4);
 
 		// an hbox to contain the buttons
 		HBox buttonContainer = new HBox();
@@ -405,48 +283,35 @@ public class Main extends Application {
 		btnLogin.setFont(Font.font(16));
 		btnLogin.setOnMouseClicked(e -> {
 			String valName = tfName.getText();
-			int valID = Integer.parseInt(tfID.getText());
-			String valCity = tfCity.getText();
-			String valState = tfState.getText();
-			User testName = new User(valName, valID);
-			if (valName.isEmpty() || valCity.isEmpty() || valState.isEmpty()
-					|| tfZip.getText().isEmpty()) {
+			
+
+			if(tfID.getText().isEmpty() || valName.isEmpty())
+			{
 				lblError.setText("FIELD(S) ARE EMPTY");
-			} else if (!User.validName(valName)) {
+			}
+			else if(!User.validName(valName))
+			{
 				tfName.clear();
 				tfName.setPromptText("FULL NAME W/ SPACES");
-			} else if (!validZipCode(tfZip.getText())) {
-				tfZip.clear();
-				tfZip.setPromptText("ENTER ONLY 5 DIGITS");
-				
-			}else {
-
-				int value5 = Integer.parseInt(tfZip.getText());
-				//User attemptLoginUser = new User(valName, valName, valCity, valState, value5);
-//				if (couldLogin(attemptLoginUser)) {
-//					login(attemptLoginUser);
-//					lblError.setText("");
-//					tfName.clear();
-//					tfCity.clear();
-//					tfState.clear();
-//					tfZip.clear();
-//					tfName.setPromptText("Enter first and last name.");
-//					tfZip.setPromptText("Enter zip code.");
-//					goLoggedIn();
-//				} else {
-//					Alert alert = new Alert(AlertType.INFORMATION);
-//					alert.setTitle("Login Error");
-//					alert.setHeaderText("The information entered is not a valid user.");
-//					alert.setContentText("Directing to page where you can register.");
-//					tfName.clear();
-//					tfAddress.clear();
-//					tfCity.clear();
-//					tfState.clear();
-//					tfZip.clear();
-//					alert.showAndWait();
-//					goRegister();
-//				}
 			}
+			else if(!validNum(tfID.getText(), 4))
+			{
+				tfID.clear();
+				tfID.setPromptText("ENTER ONLY 4 DIGITS");
+			}
+			else 
+			{
+				int valID = Integer.parseInt(tfID.getText());
+				User testName = new User(valName, valID);
+				if(expTrcker.loginUser(testName))
+				{
+					int id = Integer.parseInt(tfID.getText());
+					currentSystemUser = expTrcker.getUser(testName);
+					System.out.println(currentSystemUser.getName() + currentSystemUser.getID());
+					goLoggedIn();
+				}
+			}
+			
 		});
 
 		buttonContainer.getChildren().addAll(btnReturnToMain, btnLogin);
@@ -482,11 +347,11 @@ public class Main extends Application {
 		updateBox.setAlignment(Pos.CENTER);
 
 		// description about the Update button at top
-		Text updateTitle = new Text("Update COVID-19 Status/Interactions");
+		Text updateTitle = new Text("Update Expenses and Budget");
 		updateTitle.setFont(Font.font("", FontWeight.BOLD, 18));
 		updateTitle.setTextAlignment(TextAlignment.CENTER);
 		Text updateDescription = new Text(
-				"Update your COVID-19 Status and add people who you've interacted " + "with in the last 14 days.");
+				"Update your personal budget and the modify your total expenses within the tracker.");
 		updateDescription.setFont(Font.font("", FontPosture.ITALIC, 18));
 		updateDescription.setWrappingWidth(400);
 		updateDescription.setTextAlignment(TextAlignment.CENTER);
@@ -497,11 +362,11 @@ public class Main extends Application {
 		checkBox.setAlignment(Pos.CENTER);
 
 		// description about the Check button at top
-		Text checkTitle = new Text("Check COVID-19 Exposure Status");
+		Text checkTitle = new Text("Check Expenses and Budget");
 		checkTitle.setFont(Font.font("", FontWeight.BOLD, 18));
 		checkTitle.setTextAlignment(TextAlignment.CENTER);
-		Text checkDescription = new Text("See if anyone on your list of interactions has been exposed to or "
-				+ "interacted with others who have been exposed to COVID-19.");
+		Text checkDescription = new Text("See your current budget and a list of all expenses indicating a statistical"
+				+ " display of spending habits");
 		checkDescription.setFont(Font.font("", FontPosture.ITALIC, 18));
 		checkDescription.setWrappingWidth(400);
 		checkDescription.setTextAlignment(TextAlignment.CENTER);
@@ -517,16 +382,25 @@ public class Main extends Application {
 		hBoxTop.setSpacing(5);
 		hBoxTop.setPadding(new Insets(20, 0, 0, 0));
 
-		Button btnUpdateStatus = new Button("Update COVID-19 Status/Interactions");
+		Button btnUpdateStatus = new Button("Update Expenses and Budget");
 		btnUpdateStatus.setFont(Font.font(16));
 		btnUpdateStatus.setOnMouseClicked(e -> {
 			goUpdateStatus();
 		});
 
-		Button btnCheckStatus = new Button("Check COVID-19 Exposure Status");
+		Button btnCheckStatus = new Button("Check Expenses and Budget");
 		btnCheckStatus.setFont(Font.font(16));
 		btnCheckStatus.setOnMouseClicked(e -> {
-			goCheckStatus();
+			Alert alert = new Alert(AlertType.INFORMATION);
+			alert.setTitle("No Budget Error");
+			alert.setHeaderText("Budget is not set.");
+			alert.setContentText("Set Budget in Update Expenses and Budget");
+			if(currentSystemUser.getBudget() == null)
+			{
+				alert.showAndWait();
+			}
+			else
+				goCheckStatus();
 		});
 
 		hBoxTop.getChildren().addAll(btnUpdateStatus, btnCheckStatus);
@@ -557,72 +431,165 @@ public class Main extends Application {
 
 		// holds section for update status and add interactions
 		VBox vBox = new VBox();
-		vBox.setAlignment(Pos.CENTER);
-		vBox.setSpacing(100);
-		vBox.setPadding(new Insets(50, 0, 50, 0));
-
-		// vBox for update status
-		VBox updateBox = new VBox();
-		updateBox.setSpacing(5);
-		updateBox.setAlignment(Pos.CENTER);
-
-		Label lblUpdate = new Label("Update Status");
-		lblUpdate.setFont(Font.font(16));
-
-		MenuButton chooseStatus = new MenuButton();
-		chooseStatus.setFont(Font.font(16));
-		chooseStatus.setText("Choose status...");
-		chooseStatus.setPrefWidth(200);
-
-		MenuItem notTested = new MenuItem("Not tested");
-		MenuItem testPos = new MenuItem("Tested positive");
-		MenuItem testNeg = new MenuItem("Tested negative");
-
-		// update the actions to update in DB too
-		notTested.setOnAction(e -> {
-			chooseStatus.setText("Not tested");
-		});
-		testPos.setOnAction(e -> {
-			chooseStatus.setText("Tested positive");
-		});
-		testNeg.setOnAction(e -> {
-			chooseStatus.setText("Tested negative");
-		});
-
-		chooseStatus.getItems().addAll(notTested, testNeg, testPos);
-
-		updateBox.getChildren().addAll(lblUpdate, chooseStatus);
+		vBox.setAlignment(Pos.BASELINE_LEFT);
+		vBox.setSpacing(10);
+		vBox.setPadding(new Insets(10, 10, 10, 10));
 
 		// hbox for submitting new interactions
-		HBox hBox = new HBox();
-		hBox.setAlignment(Pos.CENTER);
-		hBox.setSpacing(5);
+		HBox hBoxID = new HBox();
+		hBoxID.setAlignment(Pos.BASELINE_LEFT);
+		hBoxID.setSpacing(26);
 
-		Label lblName = new Label("Interactions");
+		Label lblID = new Label("Order Id");
+		lblID.setFont(Font.font(16));
+
+		TextField tfID = new TextField();
+		tfID.setPromptText("Enter ID");
+		tfID.setPrefWidth(250);
+		tfID.setFont(Font.font(16));
+		
+		hBoxID.getChildren().addAll(lblID, tfID);
+		
+		HBox hBoxPrice = new HBox();
+		hBoxPrice.setAlignment(Pos.BASELINE_LEFT);
+		hBoxPrice.setSpacing(50);
+		
+		Label lblPrice = new Label("Price");
+		lblPrice.setFont(Font.font(16));
+
+		TextField tfPrice = new TextField();
+		tfPrice.setPromptText("Enter Price");
+		tfPrice.setPrefWidth(250);
+		tfPrice.setFont(Font.font(16));
+		
+		hBoxPrice.getChildren().addAll(lblPrice, tfPrice);
+		
+		HBox hBoxName = new HBox();
+		hBoxName.setAlignment(Pos.BASELINE_LEFT);
+		hBoxName.setSpacing(5);
+		
+		Label lblName = new Label("Item Name");
 		lblName.setFont(Font.font(16));
 
 		TextField tfName = new TextField();
-		tfName.setPromptText("Enter FirstName LastName.");
+		tfName.setPromptText("Enter Item Name");
 		tfName.setPrefWidth(250);
 		tfName.setFont(Font.font(16));
 
-		Button btSubmit = new Button("Submit Name");
+		Button btSubmit = new Button("Submit Expense");
 		btSubmit.setFont(Font.font(16));
+		
+		
 		btSubmit.setOnMouseClicked(e -> {
-			String interaction = tfName.getText();
-			String[] split = interaction.split(" ");
-			if (split.length == 2) {
-				//addInteractions(interaction);
-			} else {
-				tfName.clear();
-				tfName.setPromptText("ENTER FIRST AND LAST NAME");
+			String interaction = tfID.getText() + "/" + tfPrice.getText() + "/" + tfName.getText();
+			
+			if(tfID.getText().isEmpty() || tfPrice.getText().isEmpty() || tfName.getText().isEmpty())
+			{
+				//tfBudget.setPromptText("FIELD IS EMPTY ");
 			}
-			// chooseStatus.setText("Choose status...");
-			tfName.clear();
+			else if(!validNum(tfID.getText(), 3))
+			{
+				tfID.clear();
+				tfID.setPromptText("ENTER ONLY 3 DIGITS");
+			}
+			else if(!validPrice(tfPrice.getText()))
+			{
+				tfPrice.clear();
+				tfPrice.setPromptText("INVALID FORMAT EX: 59.99");
+			}
+			else if(!expTrcker.addCheckDB(currentSystemUser, tfPrice.getText()))
+			{
+				Alert alert = new Alert(AlertType.INFORMATION);
+				alert.setTitle("Add Expense Error");
+				alert.setHeaderText("Budget is not set /or The Expense entered will go Overbudget.");
+				alert.setContentText("Set Budget /or Increase Budget or do not add Expense.");
+				alert.showAndWait();
+			}
+			else
+			{
+				expTrcker.addExpenseDB(currentSystemUser, interaction);
+				currentSystemUser.setBudget(currentSystemUser.getBudget() - Double.parseDouble(tfPrice.getText()));
+				tfName.clear();
+				tfID.clear();
+				tfPrice.clear();
+				tfPrice.setPromptText("Enter Price");
+				tfID.setPromptText("Enter ID");
+			}
 		});
 
-		hBox.getChildren().addAll(lblName, tfName, btSubmit);
+		hBoxName.getChildren().addAll(lblName, tfName, btSubmit);
 
+		HBox hBox2 = new HBox();
+		hBox2.setAlignment(Pos.BASELINE_LEFT);
+		hBox2.setSpacing(5);
+
+		Label lblName2 = new Label("Budget");
+		lblName2.setFont(Font.font(16));
+		
+		TextField tfBudget = new TextField();
+		tfBudget.setPromptText("Enter Budget ");
+		tfBudget.setPrefWidth(250);
+		tfBudget.setFont(Font.font(16));
+		
+		Button btSubmitBudget = new Button("Submit Budget");
+		btSubmitBudget.setFont(Font.font(16));
+		
+		btSubmitBudget.setOnMouseClicked(e -> {
+			//int newBudget = Integer.parseInt(tfBudget.getText());
+			if(tfBudget.getText().isEmpty())
+			{
+				tfBudget.setPromptText("FIELD IS EMPTY ");
+			}
+			else if(!validPrice(tfBudget.getText()))
+			{
+				tfBudget.clear();
+				tfBudget.setPromptText("INVALID FORMAT EX: 1000.00");
+			}
+			else
+			{
+				currentSystemUser.setBudget(Double.parseDouble(tfBudget.getText()));
+				System.out.println(currentSystemUser.getBudget());
+				tfBudget.clear();
+				tfBudget.setPromptText("Enter Budget ");
+			}
+		});
+		
+		hBox2.getChildren().addAll(lblName2, tfBudget, btSubmitBudget);
+		hBox2.setPadding(new Insets(10, 25, 25, 25));
+		
+		HBox hBox3 = new HBox();
+		hBox3.setAlignment(Pos.BASELINE_LEFT);
+		hBox3.setSpacing(5);
+
+		Label lblRemove = new Label("Remove");
+		lblRemove.setFont(Font.font(16));
+		
+		TextField tfRemove = new TextField();
+		tfRemove.setPromptText("Enter Order ID ");
+		tfRemove.setPrefWidth(250);
+		tfRemove.setFont(Font.font(16));
+		
+		Button btRemove = new Button("Remove Expense");
+		btRemove.setFont(Font.font(16));
+		
+		btRemove.setOnMouseClicked(e -> {
+			//int newBudget = Integer.parseInt(tfBudget.getText());
+			if(!expTrcker.removeExpenseDB(currentSystemUser, tfRemove.getText()))
+			{
+				tfRemove.clear();
+				tfRemove.setPromptText("INVALID ORDER ID");
+				
+			}
+			else
+			{
+				System.out.println(expTrcker.getExpenses());
+				tfRemove.clear();
+				tfRemove.setPromptText("Enter Order ID ");
+			}
+		});
+		
+		hBox3.getChildren().addAll(lblRemove, tfRemove, btRemove);
+		hBox3.setPadding(new Insets(10, 25, 25, 18));
 		// add button at bottom to return to logged in screen
 		StackPane pane = new StackPane();
 		pane.setPadding(new Insets(100, 0, 0, 0));
@@ -633,15 +600,13 @@ public class Main extends Application {
 		btReturn.setFont(Font.font(16));
 		btReturn.setAlignment(Pos.CENTER);
 		btReturn.setOnMouseClicked(e -> {
-			if (validChooseStatus(chooseStatus.getText())) {
-				//updateTestStatus(chooseStatus.getText());
-			}
+			
 			goLoggedIn();
 		});
 
 		pane.getChildren().add(btReturn);
 
-		vBox.getChildren().addAll(updateBox, hBox, pane);
+		vBox.getChildren().addAll(hBoxID, hBoxPrice, hBoxName, hBox2, hBox3, pane);
 
 		return vBox;
 
@@ -661,17 +626,17 @@ public class Main extends Application {
 		pane.setAlignment(Pos.CENTER);
 
 		// labels
-		Label lblTestStatus = new Label("Test Status:");
+		Label lblTestStatus = new Label("Current Budget:");
 		lblTestStatus.setFont(Font.font("", FontWeight.BOLD, 16));
 		GridPane.setHalignment(lblTestStatus, HPos.RIGHT);
 		pane.add(lblTestStatus, 0, 0);
 
-		Label lblExposureStatus = new Label("Exposure Status:");
+		Label lblExposureStatus = new Label("Expense List:");
 		lblExposureStatus.setFont(Font.font("", FontWeight.BOLD, 16));
 		GridPane.setHalignment(lblExposureStatus, HPos.RIGHT);
 		pane.add(lblExposureStatus, 0, 1);
 
-		Label lblInteractionList = new Label("Interactions:");
+		Label lblInteractionList = new Label("Overspending:");
 		lblInteractionList.setFont(Font.font("", FontWeight.BOLD, 16));
 		GridPane.setHalignment(lblInteractionList, HPos.RIGHT);
 		pane.add(lblInteractionList, 0, 2);
@@ -679,15 +644,16 @@ public class Main extends Application {
 		// actual values
 		Text testStatus = new Text();
 		testStatus.setFont(Font.font(16));
-		testStatus.setText(checkTestStatus());
+		testStatus.setText("$" + String.valueOf(String.format("%.2f", currentSystemUser.getBudget())));
 		pane.add(testStatus, 1, 0);
 
-		Text exposureStatus = new Text();
+		Label exposureStatus = new Label(expTrcker.getExpenses());
+		exposureStatus.setWrapText(true);
 		exposureStatus.setFont(Font.font(16));
-		//exposureStatus.setText(checkExposureStatus());
+//		exposureStatus.setText(expTrcker.getExpenses());
 		pane.add(exposureStatus, 1, 1);
 
-		Text interactions = new Text();
+		Text interactions = new Text(expTrcker.overSpendingDB(currentSystemUser).toUpperCase());
 		interactions.setFont(Font.font(16));
 		//interactions.setText(checkPastInteractions());
 		interactions.setWrappingWidth(400);
@@ -784,15 +750,6 @@ public class Main extends Application {
 
 	}
 
-	public boolean couldLogin(User currentUser) {
-		if (expTrcker.loginUser(currentUser)) {
-			return true;
-		} else {
-			return false;
-		}
-
-	}
-
 	public void registerUser(User user, String status, String interactions) {
 		interactions = interactions.replace("\n", "");
 
@@ -801,14 +758,10 @@ public class Main extends Application {
 	}
 
 
-	public String checkTestStatus() {
-		return expTrcker.getTestStatus(currentSystemUser);
-	}
 
-
-	public boolean validZipCode(String str) {
+	public boolean validNum(String str, int size) {
 		int length = str.length();
-		if (length != 5) {
+		if (length != size) {
 			return false;
 		}
 		// Traverse the string from
@@ -818,72 +771,47 @@ public class Main extends Application {
 			// Check if character is
 			// not digit from 0-9
 			// then return false
-			if (str.charAt(i) <= '0' && str.charAt(i) >= '9') {
+			if (str.charAt(i) < '0' || str.charAt(i) > '9') {
 				return false;
+				
 			}
 
 		}
 		return true;
 	}
 
-	public boolean validChooseStatus(String status) {
-		if (status != "Choose status...") {
-			return true;
-		} else
-			return false;
-	}
-
-	public boolean validInteractionList(String interactionList) {
+	public boolean validPrice(String str)
+	{
+		char decimal = '.';
 		int count = 0;
-//		//corner case where no commas in string (removed)
-//		if(interactionList.indexOf(",", count) == -1)
-//			return false;
-
-		while (interactionList.indexOf(",", count) != -1) {
-			int currentComma = interactionList.indexOf(",", count);
-			// checks if there is a space between first/last names between commas
-			if (interactionList.indexOf(",", count) <= interactionList.indexOf(" ", count))
-				return false;
-			// checks spacing
-			else if (interactionList.indexOf(" ", currentComma) != currentComma + 1) {
-				// corner case where comma is end of string
-				if (interactionList.indexOf(" ", currentComma) == -1)
-					return true;
-				return false;
-			} else
-				count = currentComma + 2;
-
+		 
+		for (int i = 0; i < str.length(); i++) {
+		    if (str.charAt(i) == decimal) {
+		        count++;
+		    }
 		}
-
-		// corner case where only one interaction, no spacing
-		if (count < interactionList.length() && interactionList.indexOf(" ", count) == -1)
+		if(count != 1)
+		{
 			return false;
+		}
+		//System.out.println(str);
+		String[] split = str.split("\\.");
 
+		//System.out.println(split[1]);
+		if(split[1].length() > 2)
+			return false;
+		
+		for(int k = 0; k < split.length; k++)
+		{
+			//System.out.println(split[k]);
+			if(!validNum(split[k], split[k].length()))
+			{
+				return false;
+			}
+		}
 		return true;
 	}
     
-    public boolean validAddress(String address)
-    {
-    	//checks first case of address formatting
-    	if(!address.contains(" "))
-    		return false;
-    	
-    	//splits address to check num string
-    	String[] split = address.split(" ");
-    	String str = split[0];
 
-    	for (int i = 0; i < str.length(); i++) {
-             // Check if character is
-             // not digit 
-             // then return false
-    		
-             if (!Character.isDigit(str.charAt(i))) {
-            	 System.out.println(str.charAt(i));
-                 return false;
-             }
-    	 }
-    	 return true;
-    	
-    }
     
 }
